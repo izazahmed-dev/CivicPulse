@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Plus, Map, ChevronRight } from "lucide-react";
+import { Plus, Map, ChevronRight, Droplets, Users } from "lucide-react";
 import Link from "next/link";
 
 interface ActionCardProps {
@@ -46,7 +46,7 @@ const ActionCard: React.FC<ActionCardProps> = ({
         <ChevronRight className="w-6 h-6 text-white" />
       </div>
 
-      {/* Optional Dot (e.g. for "Live" status or design element) */}
+      {/* Optional Dot */}
       {hasDot && (
         <div className="absolute bottom-8 right-1/2 translate-x-1/2 translate-y-8 w-1.5 h-1.5 rounded-full bg-orange-400/80 shadow-[0_0_8px_rgba(251,146,60,0.6)]"></div>
       )}
@@ -61,18 +61,38 @@ export default function ActionCards() {
         icon={Plus}
         title="Report Water Issue"
         description="Submit a complaint in under 30 seconds. No login required."
-        bgColorClass="bg-[#2563eb]" // Blue
+        bgColorClass="bg-[#2563eb]"
         hoverColorClass="hover:bg-[#1d4ed8]"
         circleColorClass="bg-white/20"
-        hasDot={true} // Adding the small orange dot from the design
+        hasDot={true}
         href="/report"
+      />
+
+      <ActionCard
+        icon={Droplets}
+        title="Scan Water Quality"
+        description="AI-powered analysis of your tap water. Camera or upload."
+        bgColorClass="bg-gradient-to-r from-cyan-700 to-blue-800"
+        hoverColorClass="hover:from-cyan-600 hover:to-blue-700"
+        circleColorClass="bg-cyan-400/20"
+        href="/scan"
+      />
+
+      <ActionCard
+        icon={Users}
+        title="Community Chat"
+        description="Discuss water issues with your neighbors. Upvote & reply."
+        bgColorClass="bg-gradient-to-r from-violet-800 to-purple-900"
+        hoverColorClass="hover:from-violet-700 hover:to-purple-800"
+        circleColorClass="bg-violet-400/20"
+        href="/community"
       />
 
       <ActionCard
         icon={Map}
         title="View Live Dashboard"
         description="See complaint heatmap and area-wise water supply status."
-        bgColorClass="bg-[#1e3a8a]" // Darker Blue
+        bgColorClass="bg-[#1e3a8a]"
         hoverColorClass="hover:bg-[#172554]"
         circleColorClass="bg-[#3b82f6]/20"
         href="/dashboard"

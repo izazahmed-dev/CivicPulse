@@ -28,15 +28,19 @@ export default function DashboardPage() {
   const [stats, setStats] = useState({ total: 0, critical: 0, resolved: 0 });
 
   useEffect(() => {
-    // Load from LocalStorage
-    const stored = JSON.parse(localStorage.getItem('water_complaints') || '[]');
-    setComplaints(stored);
-
-    // Calculate Stats
-    const total = stored.length;
-    const critical = stored.filter((c: Complaint) => c.issueType === 'no_water' || c.issueType === 'dirty_water').length;
-    const resolved = stored.filter((c: Complaint) => c.status === 'RESOLVED').length;
-    setStats({ total, critical, resolved });
+    // Load from MongoDB via API
+    fetch('/api/complaints')
+      .then(res => res.json())
+      .then((stored: Complaint[]) => {
+        if (Array.isArray(stored)) {
+          setComplaints(stored);
+          const total = stored.length;
+          const critical = stored.filter((c) => c.issueType === 'no_water' || c.issueType === 'dirty_water').length;
+          const resolved = stored.filter((c) => c.status === 'RESOLVED').length;
+          setStats({ total, critical, resolved });
+        }
+      })
+      .catch(err => console.error('Failed to load complaints:', err));
   }, []);
 
   const filteredComplaints = selectedArea 

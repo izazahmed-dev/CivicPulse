@@ -1,199 +1,325 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { MapPin, Droplets, AlertTriangle, CheckCircle, ArrowLeft } from 'lucide-react';
-
-// Mock Locations with Lat/Lng (Chennai Context)
-const AREAS = [
-  { name: 'T. Nagar', lat: 13.0418, lng: 80.2341 },
-  { name: 'Adyar', lat: 13.0012, lng: 80.2565 },
-  { name: 'Anna Nagar', lat: 13.0850, lng: 80.2101 },
-  { name: 'Velachery', lat: 12.9759, lng: 80.2212 },
-  { name: 'Mylapore', lat: 13.0368, lng: 80.2676 },
-  { name: 'Royapettah', lat: 13.0581, lng: 80.2641 },
-];
+import { Droplets, AlertTriangle, CheckCircle, ArrowLeft, Crosshair, MapPin, Navigation } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import CascadingLocationDropdown from '@/components/CascadingLocationDropdown';
+const LocationPicker = dynamic(() => import('@/components/LocationPicker'), {
+    ssr: false,
+    loading: () => <div className="w-full h-[300px] rounded-xl bg-white/[0.03] flex items-center justify-center animate-pulse"><span className="text-white/20 text-sm">Loading Map...</span></div>
+});
+import { findNearestLocation, NearestLocationResult, haversineKm } from '@/data/indiaAreas';
 
 const ISSUE_TYPES = [
-  { id: 'no_water', label: 'No Water Supply', icon: Droplets, color: 'text-crisis border-crisis bg-crisis/10' },
-  { id: 'low_pressure', label: 'Low Pressure', icon: ArrowLeft, color: 'text-warning border-warning bg-warning/10' },
-  { id: 'dirty_water', label: 'Contaminated Water', icon: AlertTriangle, color: 'text-orange-500 border-orange-500 bg-orange-500/10' },
-  { id: 'leakage', label: 'Pipe Leakage', icon: Droplets, color: 'text-blue-400 border-blue-400 bg-blue-400/10' },
+    { id: 'no_water', label: 'No Water Supply', icon: Droplets, color: 'text-rose-400 border-rose-500/40 bg-rose-500/10' },
+    { id: 'low_pressure', label: 'Low Pressure', icon: ArrowLeft, color: 'text-amber-400 border-amber-500/40 bg-amber-500/10' },
+    { id: 'dirty_water', label: 'Contaminated Water', icon: AlertTriangle, color: 'text-orange-400 border-orange-500/40 bg-orange-500/10' },
+    { id: 'leakage', label: 'Pipe Leakage', icon: Droplets, color: 'text-blue-400 border-blue-500/40 bg-blue-400/10' },
 ];
 
 export default function ReportPage() {
-  const [step, setStep] = useState<'form' | 'success'>('form');
-  const [loading, setLoading] = useState(false);
-  const [complaintId, setComplaintId] = useState('');
-  
-  const [formData, setFormData] = useState({
-    area: '',
-    issueType: '',
-    description: ''
-  });
+    const [step, setStep] = useState<'form' | 'success'>('form');
+    const [loading, setLoading] = useState(false);
+    const [complaintId, setComplaintId] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+    const [formData, setFormData] = useState({
+        state: '',
+        district: '',
+        area: '',
+        subarea: '',
+        areaPath: '',
+        issueType: '',
+        description: '',
+        confirmPin: false,
+    });
 
-    // Simulate Network Delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    const [location, setLocation] = useState({
+        lat: 20.5937,
+        lng: 78.9629,
+        path: ''
+    });
 
-    // Create Complaint Object
-    const selectedArea = AREAS.find(a => a.name === formData.area);
-    const newComplaint = {
-      id: `WC-${Math.floor(Math.random() * 10000)}`,
-      ...formData,
-      lat: selectedArea?.lat || 13.0827,
-      lng: selectedArea?.lng || 80.2707,
-      timestamp: Date.now(),
-      status: 'OPEN'
+    const [nearestArea, setNearestArea] = useState<NearestLocationResult | null>(null);
+
+    const handleSelectionChange = (selection: {
+        state: string;
+        district: string;
+        area: string;
+        subarea: string;
+        lat: number;
+        lng: number;
+        fullPath: string;
+    }) => {
+        setFormData(prev => ({
+            ...prev,
+            state: selection.state,
+            district: selection.district,
+            area: selection.area,
+            subarea: selection.subarea,
+            areaPath: selection.fullPath,
+        }));
+        setLocation({
+            lat: selection.lat,
+            lng: selection.lng,
+            path: selection.fullPath,
+        });
     };
 
-    // Save to LocalStorage
-    const existing = JSON.parse(localStorage.getItem('water_complaints') || '[]');
-    localStorage.setItem('water_complaints', JSON.stringify([newComplaint, ...existing]));
+    const handleMapChange = (lat: number, lng: number) => {
+        setLocation(prev => ({ ...prev, lat, lng }));
+    };
 
-    setComplaintId(newComplaint.id);
-    setStep('success');
-    setLoading(false);
-  };
+    useEffect(() => {
+        const nearest = findNearestLocation(location.lat, location.lng);
+        setNearestArea(nearest);
+    }, [location.lat, location.lng]);
 
-  return (
-    <main className="min-h-screen bg-[#0a192f] text-[#e6f1ff] p-4 md:p-8 flex items-center justify-center">
-      <Link href="/" className="absolute top-6 left-6 text-slate-400 hover:text-white flex items-center gap-2 transition-colors">
-        <ArrowLeft size={20} /> Back to Home
-      </Link>
+    const distanceFromSelectedArea = formData.area
+        ? (() => {
+            // Find the area coordinates from the hierarchy — use the last selected level
+            const nearest = findNearestLocation(location.lat, location.lng);
+            return nearest ? nearest.distanceKm : null;
+        })()
+        : null;
 
-      <div className="w-full max-w-lg">
-        {step === 'form' ? (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-[#0f172a] p-8 rounded-2xl border border-slate-700 shadow-2xl"
-          >
-            <h1 className="text-3xl font-bold mb-2 text-white">Report Issue</h1>
-            <p className="text-slate-400 mb-8">Help us track water supply status in your area.</p>
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Area Selection */}
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Location / Area</label>
-                <div className="relative">
-                  <MapPin className="absolute left-4 top-3.5 text-slate-500" size={18} />
-                  <select 
-                    required
-                    className="w-full bg-[#1e293b] text-white pl-12 pr-4 py-3 rounded-xl border border-slate-600 focus:border-[#06d6a0] focus:ring-1 focus:ring-[#06d6a0] outline-none appearance-none cursor-pointer"
-                    value={formData.area}
-                    onChange={e => setFormData({...formData, area: e.target.value})}
-                  >
-                    <option value="">Select your area</option>
-                    {AREAS.map(area => (
-                      <option key={area.name} value={area.name}>{area.name}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+        const complaintData = {
+            ...formData,
+            lat: location.lat,
+            lng: location.lng,
+            fullPath: formData.areaPath,
+            selectedAreaPath: formData.areaPath,
+            selectedAreaType: formData.subarea ? 'subarea' : formData.area ? 'area' : formData.district ? 'city' : 'state',
+            selectedAreaName: formData.subarea || formData.area || formData.district || formData.state,
+            distanceFromSelectedAreaKm: distanceFromSelectedArea,
+        };
 
-              {/* Issue Type */}
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-3">Issue Type</label>
-                <div className="grid grid-cols-2 gap-3">
-                  {ISSUE_TYPES.map((type) => {
-                    const Icon = type.icon;
-                    const isSelected = formData.issueType === type.id;
-                    return (
-                      <label 
-                        key={type.id}
-                        className={`
-                          cursor-pointer p-4 rounded-xl border transition-all flex flex-col items-center justify-center gap-2 text-center
-                          ${isSelected 
-                            ? `${type.color} ring-1 ring-offset-2 ring-offset-[#0f172a] shadow-lg scale-[1.02]` 
-                            : 'border-slate-700 bg-[#1e293b] text-slate-400 hover:border-slate-500 hover:bg-[#253248]'
-                          }
-                        `}
-                      >
-                        <input 
-                          type="radio" 
-                          name="issue" 
-                          value={type.id} 
-                          required
-                          className="hidden"
-                          onChange={(e) => setFormData({...formData, issueType: e.target.value})} 
-                        />
-                        <Icon size={24} />
-                        <span className="text-sm font-medium">{type.label}</span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
+        try {
+            const res = await fetch('/api/complaints', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(complaintData),
+            });
+            const data = await res.json();
+            setComplaintId(data.complaint?.id || 'WC-0000');
+        } catch (err) {
+            console.error('Failed to submit complaint:', err);
+            setComplaintId('WC-ERR');
+        }
 
-              {/* Description */}
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Additional Details (Optional)</label>
-                <textarea 
-                  className="w-full bg-[#1e293b] text-white p-4 rounded-xl border border-slate-600 focus:border-[#06d6a0] focus:ring-1 focus:ring-[#06d6a0] outline-none min-h-[100px] resize-none"
-                  placeholder="e.g. No water for 2 days, pressure is very low..."
-                  value={formData.description}
-                  onChange={e => setFormData({...formData, description: e.target.value})}
-                />
-              </div>
+        setStep('success');
+        setLoading(false);
+    };
 
-              <button 
-                type="submit" 
-                disabled={loading}
-                className="w-full bg-[#06d6a0] hover:bg-[#05b588] text-[#0a192f] font-bold py-4 rounded-xl text-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-              >
-                {loading ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-[#0a192f] border-t-transparent rounded-full animate-spin" />
-                    Submitting...
-                  </>
+    return (
+        <main className="min-h-screen bg-[#060e1a] text-white p-4 md:p-8 flex items-center justify-center">
+            <Link href="/" className="absolute top-6 left-6 text-white/30 hover:text-white flex items-center gap-2 transition-colors z-10">
+                <ArrowLeft size={20} /> Back to Home
+            </Link>
+
+            <div className="w-full max-w-lg mt-12 mb-12">
+                {step === 'form' ? (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="rounded-3xl border border-white/[0.06] shadow-2xl shadow-black/40 overflow-hidden"
+                        style={{ background: 'linear-gradient(180deg, #0c1628 0%, #080f1c 100%)' }}
+                    >
+                        {/* Header */}
+                        <div className="p-8 pb-0">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                                    <Crosshair className="text-white" size={20} />
+                                </div>
+                                <div>
+                                    <h1 className="text-2xl font-bold text-white">Report Issue</h1>
+                                    <p className="text-xs text-white/30">Drill down to your exact location for faster resolution</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <form onSubmit={handleSubmit} className="p-8 space-y-8">
+                            {/* ── Step 1: Cascading Location Selection ── */}
+                            <div>
+                                <div className="flex items-center gap-2 mb-4">
+                                    <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center justify-center">1</div>
+                                    <h2 className="text-sm font-semibold text-white/70">Select Your Location</h2>
+                                </div>
+
+                                <CascadingLocationDropdown
+                                    onSelectionChange={handleSelectionChange}
+                                />
+
+                                {/* Hidden required input for form validation */}
+                                <input
+                                    type="hidden"
+                                    value={formData.area}
+                                    required
+                                />
+                            </div>
+
+                            {/* ── Step 2: Pin Precise Location on Map ── */}
+                            <div className="relative">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center justify-center">2</div>
+                                    <h2 className="text-sm font-semibold text-white/70">Pin Precise Location</h2>
+                                </div>
+
+                                <div className="relative z-0">
+                                    <LocationPicker
+                                        lat={location.lat}
+                                        lng={location.lng}
+                                        onChange={handleMapChange}
+                                    />
+                                </div>
+
+                                {nearestArea && (
+                                    <div className="mt-3 rounded-xl p-3 text-xs border border-white/[0.06] bg-white/[0.02]">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <span className="text-white/30">Closest match to pin:</span>
+                                            <span className="text-[10px] uppercase tracking-wide text-white/15">{nearestArea.location.type}</span>
+                                        </div>
+                                        <div className="text-white/70 font-medium truncate mt-1">{nearestArea.location.path}</div>
+                                        <div className="text-[10px] text-white/20 mt-0.5">
+                                            {nearestArea.distanceKm.toFixed(2)} km from pin
+                                        </div>
+                                    </div>
+                                )}
+
+                                <label className="mt-3 flex items-center gap-2 text-xs text-white/30">
+                                    <input
+                                        type="checkbox"
+                                        required
+                                        checked={formData.confirmPin}
+                                        onChange={(e) => setFormData({ ...formData, confirmPin: e.target.checked })}
+                                        className="accent-emerald-400 rounded"
+                                    />
+                                    I confirm the pin marks the exact location of the issue.
+                                </label>
+                            </div>
+
+                            {/* ── Step 3: Issue Details ── */}
+                            <div>
+                                <div className="flex items-center gap-2 mb-4">
+                                    <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center justify-center">3</div>
+                                    <h2 className="text-sm font-semibold text-white/70">Issue Details</h2>
+                                </div>
+
+                                {/* Issue Type */}
+                                <div className="grid grid-cols-2 gap-3 mb-6">
+                                    {ISSUE_TYPES.map((type) => {
+                                        const Icon = type.icon;
+                                        const isSelected = formData.issueType === type.id;
+                                        return (
+                                            <label
+                                                key={type.id}
+                                                className={`
+                                                    cursor-pointer p-4 rounded-xl border transition-all flex flex-col items-center justify-center gap-2 text-center
+                                                    ${isSelected
+                                                        ? `${type.color} ring-1 ring-emerald-500/50 shadow-lg scale-[1.02]`
+                                                        : 'border-white/[0.06] bg-white/[0.02] text-white/30 hover:border-white/[0.12] hover:bg-white/[0.04]'
+                                                    }
+                                                `}
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    name="issue"
+                                                    value={type.id}
+                                                    required
+                                                    className="hidden"
+                                                    onChange={(e) => setFormData({ ...formData, issueType: e.target.value })}
+                                                />
+                                                <Icon size={24} />
+                                                <span className="text-xs font-semibold">{type.label}</span>
+                                            </label>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Description */}
+                                <textarea
+                                    className="w-full bg-white/[0.03] text-white p-4 rounded-xl border border-white/[0.06] focus:border-emerald-500/40 focus:shadow-[0_0_20px_rgba(16,185,129,0.05)] outline-none min-h-[80px] text-sm placeholder:text-white/15 transition-all"
+                                    placeholder="Describe the issue in detail... (optional)"
+                                    value={formData.description}
+                                    onChange={e => setFormData({ ...formData, description: e.target.value })}
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={loading || !formData.area || !formData.issueType || !formData.confirmPin}
+                                className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold py-4 rounded-xl text-base transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/20"
+                            >
+                                {loading ? (
+                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                    <>
+                                        <Navigation size={18} />
+                                        Submit Report
+                                    </>
+                                )}
+                            </button>
+                        </form>
+                    </motion.div>
                 ) : (
-                  'Submit Report'
-                )}
-              </button>
-            </form>
-          </motion.div>
-        ) : (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-[#0f172a] p-10 rounded-2xl border border-slate-700 text-center shadow-2xl"
-          >
-            <div className="w-20 h-20 bg-[#06d6a0]/20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle className="text-[#06d6a0]" size={40} />
-            </div>
-            <h2 className="text-3xl font-bold text-white mb-2">Report Submitted</h2>
-            <p className="text-slate-400 mb-6">Thank you for being a responsible citizen.</p>
-            
-            <div className="bg-[#1e293b] p-4 rounded-lg mb-8 inline-block">
-              <span className="text-slate-500 text-xs uppercase tracking-wider block mb-1">Complaint ID</span>
-              <span className="text-xl font-mono text-[#06d6a0]">{complaintId}</span>
-            </div>
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="rounded-3xl border border-white/[0.06] text-center shadow-2xl overflow-hidden"
+                        style={{ background: 'linear-gradient(180deg, #0c1628 0%, #080f1c 100%)' }}
+                    >
+                        <div className="p-10">
+                            <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ type: 'spring', damping: 15, delay: 0.2 }}
+                                className="w-20 h-20 bg-emerald-500/15 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-500/10"
+                            >
+                                <CheckCircle className="text-emerald-400" size={40} />
+                            </motion.div>
+                            <h2 className="text-2xl font-bold text-white mb-2">Report Submitted</h2>
+                            <p className="text-white/30 mb-6 text-sm">Our crew has your exact coordinates and will investigate soon.</p>
 
-            <div className="flex flex-col gap-3">
-              <Link 
-                href="/dashboard" 
-                className="w-full bg-[#0a192f] border border-[#06d6a0] text-[#06d6a0] font-bold py-3 rounded-xl hover:bg-[#06d6a0]/10 transition-colors"
-              >
-                View Live Dashboard
-              </Link>
-              <button 
-                onClick={() => {
-                   setFormData({ area: '', issueType: '', description: '' });
-                   setStep('form');
-                }}
-                className="text-slate-400 hover:text-white text-sm py-2"
-              >
-                Report Another Issue
-              </button>
+                            <div className="bg-white/[0.03] border border-white/[0.06] p-4 rounded-xl mb-8 inline-block">
+                                <span className="text-white/20 text-[10px] uppercase tracking-wider block mb-1">Complaint ID</span>
+                                <span className="text-xl font-mono text-emerald-400 font-bold">{complaintId}</span>
+                            </div>
+
+                            {formData.areaPath && (
+                                <div className="flex items-center justify-center gap-2 mb-6 text-xs text-white/20">
+                                    <MapPin className="w-3.5 h-3.5" />
+                                    <span>{formData.areaPath}</span>
+                                </div>
+                            )}
+
+                            <div className="flex flex-col gap-3">
+                                <Link
+                                    href="/dashboard"
+                                    className="w-full border border-emerald-500/30 text-emerald-400 font-bold py-3 rounded-xl hover:bg-emerald-500/10 transition-colors text-center"
+                                >
+                                    View Live Dashboard
+                                </Link>
+                                <button
+                                    onClick={() => {
+                                        setFormData({ state: '', district: '', area: '', subarea: '', areaPath: '', issueType: '', description: '', confirmPin: false });
+                                        setLocation({ lat: 20.5937, lng: 78.9629, path: '' });
+                                        setNearestArea(null);
+                                        setStep('form');
+                                    }}
+                                    className="text-white/20 hover:text-white/50 text-sm py-2 transition-colors"
+                                >
+                                    Report Another Issue
+                                </button>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
             </div>
-          </motion.div>
-        )}
-      </div>
-    </main>
-  );
+        </main>
+    );
 }
