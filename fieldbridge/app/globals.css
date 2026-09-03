@@ -1,0 +1,189 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #07111f;
+  --bg-elevated: #0d1a2b;
+  --bg-card: rgba(13, 26, 43, 0.82);
+  --fg: #eef5ff;
+  --muted: rgba(238, 245, 255, 0.65);
+  --subtle: rgba(238, 245, 255, 0.36);
+  --line: rgba(238, 245, 255, 0.1);
+  --cyan: #6be7ff;
+  --lime: #d4ff67;
+  --amber: #ffc766;
+  --rose: #ff7c8f;
+  --emerald: #59f0c6;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  color: var(--fg);
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(107, 231, 255, 0.18), transparent 24%),
+    radial-gradient(circle at top right, rgba(212, 255, 103, 0.12), transparent 20%),
+    linear-gradient(180deg, #07111f 0%, #0a1525 100%);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+::selection {
+  background: rgba(107, 231, 255, 0.3);
+}
+
+.fb-shell {
+  min-height: 100vh;
+}
+
+.fb-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 52px 52px;
+}
+
+.fb-panel {
+  border: 1px solid var(--line);
+  background: var(--bg-card);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
+}
+
+.fb-panel-soft {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.fb-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  padding: 0.45rem 0.75rem;
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.fb-kicker {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--cyan);
+}
+
+.fb-heading {
+  font-family: "Sora", "Space Grotesk", sans-serif;
+  letter-spacing: -0.05em;
+}
+
+.fb-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  padding: 0.85rem 1.25rem;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.fb-button:hover {
+  transform: translateY(-1px);
+}
+
+.fb-button-primary {
+  background: linear-gradient(135deg, var(--lime), #ffe87c);
+  color: #08121f;
+  box-shadow: 0 16px 40px rgba(212, 255, 103, 0.18);
+}
+
+.fb-button-secondary {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--fg);
+}
+
+.fb-input,
+.fb-select,
+.fb-textarea {
+  width: 100%;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(4, 10, 20, 0.56);
+  color: var(--fg);
+  padding: 0.95rem 1rem;
+  outline: none;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.fb-input:focus,
+.fb-select:focus,
+.fb-textarea:focus {
+  border-color: rgba(107, 231, 255, 0.6);
+  box-shadow: 0 0 0 3px rgba(107, 231, 255, 0.16);
+}
+
+.fb-textarea {
+  min-height: 130px;
+  resize: vertical;
+}
+
+.fb-status-new { background: rgba(107, 231, 255, 0.12); color: var(--cyan); }
+.fb-status-triaged { background: rgba(255, 199, 102, 0.12); color: var(--amber); }
+.fb-status-in_progress { background: rgba(255, 124, 143, 0.12); color: var(--rose); }
+.fb-status-resolved { background: rgba(89, 240, 198, 0.12); color: var(--emerald); }
+.fb-status-verified { background: rgba(212, 255, 103, 0.15); color: var(--lime); }
+
+.fb-risk-stable { color: var(--emerald); }
+.fb-risk-watch { color: var(--cyan); }
+.fb-risk-elevated { color: var(--amber); }
+.fb-risk-critical { color: var(--rose); }
+
+.fb-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.fb-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+}
+
+.fb-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.16), transparent);
+}
+
+@media (max-width: 768px) {
+  .fb-button {
+    width: 100%;
+  }
+}
+

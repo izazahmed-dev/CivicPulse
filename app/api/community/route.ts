@@ -13,7 +13,7 @@ const DEMO_POSTS = [
         upvotes: 24,
         upvotedBy: ['a', 'b', 'c'],
         replies: [
-            { id: 'cr-1', author: { name: 'Rajesh Kumar', avatar: 'RK', phone: '9876543211' }, message: "Same here, 2nd Main Road. I've already filed a complaint on WaterGrid. Complaint ID: WC-4821.", timestamp: Date.now() - 3200000 },
+            { id: 'cr-1', author: { name: 'Rajesh Kumar', avatar: 'RK', phone: '9876543211' }, message: "Same here, 2nd Main Road. I've already filed a complaint on CivicPulse. Complaint ID: WC-4821.", timestamp: Date.now() - 3200000 },
             { id: 'cr-2', author: { name: 'Lakshmi V', avatar: 'LV', phone: '9876543212' }, message: "Update: Municipal office said supply will resume by 2 PM. Pipeline repair underway near Elliot's Beach.", timestamp: Date.now() - 1800000 },
         ],
         tag: 'issue',
@@ -23,7 +23,7 @@ const DEMO_POSTS = [
         author: { name: 'Amit Patel', avatar: 'AP', phone: '9876543220' },
         area: 'T. Nagar, Pondy Bazaar',
         city: 'Chennai',
-        message: "Water quality has significantly improved after last week's pipe replacement. The WaterGrid scan shows clean results now! Great work by the civic team. 💧✅",
+        message: "Water quality has significantly improved after last week's pipe replacement. The CivicPulse scan shows clean results now! Great work by the civic team. 💧✅",
         timestamp: Date.now() - 86400000,
         upvotes: 31,
         upvotedBy: ['d', 'e', 'f'],
@@ -106,10 +106,16 @@ export async function POST(req: Request) {
 
         const post = {
             id: `cp-${Date.now()}`,
-            author: body.author,
+            author: { 
+                name: body.author.name, 
+                avatar: body.author.avatar, 
+                phone: body.author.phone,
+                badges: body.author.badges || [] 
+            },
             area: body.area,
             city: body.area.split(',')[0]?.trim() || 'Unknown',
             message: body.message,
+            image: body.image || null,
             timestamp: Date.now(),
             upvotes: 0,
             upvotedBy: [],

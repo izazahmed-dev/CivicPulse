@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-export interface WaterGridUser {
+export interface CivicPulseUser {
     phone: string;
     name: string;
     avatar: string; // Initials-based
@@ -10,7 +10,7 @@ export interface WaterGridUser {
 }
 
 interface AuthContextType {
-    user: WaterGridUser | null;
+    user: CivicPulseUser | null;
     isLoading: boolean;
     sendOtp: (phone: string) => Promise<string>; // Returns masked phone
     verifyOtp: (otp: string) => boolean;
@@ -19,7 +19,7 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-const STORAGE_KEY = "watergrid_user";
+const STORAGE_KEY = "civicpulse_user";
 
 function getInitials(name: string): string {
     return name
@@ -31,7 +31,7 @@ function getInitials(name: string): string {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [user, setUser] = useState<WaterGridUser | null>(null);
+    const [user, setUser] = useState<CivicPulseUser | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [pendingPhone, setPendingPhone] = useState("");
     const [generatedOtp, setGeneratedOtp] = useState("");
@@ -53,21 +53,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setGeneratedOtp(otp);
         setPendingPhone(phone);
         // In production, this would call an SMS API
-        console.log(`[WaterGrid DEV] OTP for ${phone}: ${otp}`);
+        console.log(`[CivicPulse] OTP for ${phone}: ${otp}`);
         // Return masked phone for display
         return phone.replace(/(\d{2})\d{4}(\d{4})/, "$1****$2");
     };
 
     const verifyOtp = (otp: string): boolean => {
-        // Accept any 6-digit OTP for demo, or exact match
-        if (otp.length === 6) {
-            return true;
-        }
-        return false;
+        return otp.length === 6 && /^\d{6}$/.test(otp) && otp === generatedOtp;
     };
 
     const setUserName = (name: string) => {
-        const newUser: WaterGridUser = {
+        const newUser: CivicPulseUser = {
             phone: pendingPhone,
             name,
             avatar: getInitials(name),

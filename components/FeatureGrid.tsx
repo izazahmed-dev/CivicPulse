@@ -9,10 +9,14 @@ import {
   Droplets,
   Users,
   ArrowRight,
+  ThermometerSun,
+  Trophy,
+  GitBranch,
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useChat } from "@/context/ChatContext";
+import { useLanguage } from "@/context/LanguageContext";
 
 /* ───────────── types ───────────── */
 
@@ -68,6 +72,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
   isHero = false,
   index,
 }) => {
+  const { t } = useLanguage();
   const cardRef = useRef<HTMLDivElement>(null);
   const [tilt, setTilt] = useState<TiltState>(INITIAL_TILT);
   const [isHovered, setIsHovered] = useState(false);
@@ -279,7 +284,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
             {/* Arrow CTA */}
             <div className="flex items-center gap-2 text-sm font-medium text-white/40 group-hover:text-white/80 transition-colors duration-300">
               <span style={{ opacity: isHovered ? 0.9 : 0.4, transition: "opacity 0.3s" }}>
-                Explore
+                {t('common.explore') || 'Explore'}
               </span>
               <ArrowRight
                 className="w-4 h-4"
@@ -310,96 +315,188 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
 
 export default function FeatureGrid() {
   const { openChat } = useChat();
+  const { t } = useLanguage();
 
   const features = [
     {
       icon: Plus,
-      title: "Citizen Reporting",
-      description:
-        "Report water issues in under 30 seconds. No login needed. Geotagged, instant, and impactful.",
+      title: t('card.report.title'),
+      description: t('card.report.desc'),
       tags: ["Frictionless", "Mobile-First", "Accessible"],
-      glowColor: "#3b82f6",
-      gradientFrom: "rgba(15, 25, 60, 0.9)",
-      gradientTo: "rgba(20, 35, 80, 0.7)",
+      glowColor: "#c8ff00",
+      gradientFrom: "rgba(10, 10, 10, 0.95)",
+      gradientTo: "rgba(15, 15, 10, 0.8)",
       href: "/report",
       isHero: true,
     },
     {
-      icon: Droplets,
-      title: "Water Scanner",
-      description:
-        "AI-powered water quality analysis. Point your camera or upload a photo for instant turbidity and contamination scoring.",
-      tags: ["AI Vision", "Instant Results", "Camera/Upload"],
-      glowColor: "#06b6d4",
-      gradientFrom: "rgba(10, 30, 50, 0.9)",
-      gradientTo: "rgba(15, 45, 65, 0.7)",
-      href: "/scan",
+      icon: Map,
+      title: t('card.dashboard.title'),
+      description: t('card.dashboard.desc'),
+      tags: ["Real-time", "Data Viz", "Actionable"],
+      glowColor: "#00d4ff",
+      gradientFrom: "rgba(10, 10, 10, 0.95)",
+      gradientTo: "rgba(10, 12, 18, 0.8)",
+      href: "/dashboard",
       isHero: true,
     },
     {
-      icon: Map,
-      title: "Heatmap Dashboard",
-      description:
-        "Interactive severity-coded zones. Click any area for detailed complaint breakdown.",
-      tags: ["Real-time", "Data Viz", "Actionable"],
-      glowColor: "#f97316",
-      gradientFrom: "rgba(35, 18, 12, 0.9)",
-      gradientTo: "rgba(50, 25, 18, 0.7)",
-      href: "/dashboard",
-    },
-    {
       icon: Users,
-      title: "Community Chat",
-      description:
-        "Public forum for local water issues. Upvote, reply, and coordinate with neighbors.",
+      title: t('card.community.title'),
+      description: t('card.community.desc'),
       tags: ["Forum", "Location-tagged", "Real-time"],
       glowColor: "#8b5cf6",
-      gradientFrom: "rgba(25, 15, 45, 0.9)",
-      gradientTo: "rgba(35, 22, 60, 0.7)",
+      gradientFrom: "rgba(10, 10, 10, 0.95)",
+      gradientTo: "rgba(14, 10, 18, 0.8)",
       href: "/community",
     },
     {
       icon: MessageCircle,
-      title: "AI Assistant",
-      description:
-        "24/7 multilingual chatbot. Instant answers, guidance, and support.",
+      title: t('card.ai.title'),
+      description: t('card.ai.desc'),
       tags: ["AI Powered", "Tamil Support", "Always On"],
       glowColor: "#ec4899",
-      gradientFrom: "rgba(40, 15, 30, 0.9)",
-      gradientTo: "rgba(55, 20, 40, 0.7)",
+      gradientFrom: "rgba(10, 10, 10, 0.95)",
+      gradientTo: "rgba(18, 10, 14, 0.8)",
       onClick: openChat,
     },
     {
       icon: BarChart,
-      title: "Analytics & Insights",
-      description:
-        "Track trends, response times, and resolution rates for data-driven planning.",
+      title: t('card.analytics.title'),
+      description: t('card.analytics.desc'),
       tags: ["Trends", "KPIs", "Reports"],
-      glowColor: "#10b981",
-      gradientFrom: "rgba(8, 35, 28, 0.9)",
-      gradientTo: "rgba(12, 50, 38, 0.7)",
+      glowColor: "#00ff87",
+      gradientFrom: "rgba(10, 10, 10, 0.95)",
+      gradientTo: "rgba(10, 15, 12, 0.8)",
       href: "/analytics",
+    },
+  ];
+  const newFeatures = [
+    {
+      icon: ThermometerSun,
+      title: t('card.forecast.title'),
+      description: t('card.forecast.desc'),
+      tags: ["Predictive", "Per-Area", "5-Day"],
+      glowColor: "#0ea5e9",
+      gradientFrom: "rgba(10, 10, 10, 0.95)",
+      gradientTo: "rgba(10, 14, 20, 0.8)",
+      href: "/forecast",
+      isHero: true,
+    },
+    {
+      icon: GitBranch,
+      title: t('card.ticket.title'),
+      description: t('card.ticket.desc'),
+      tags: ["Live Status", "Verification", "Gamified"],
+      glowColor: "#a855f7",
+      gradientFrom: "rgba(10, 10, 10, 0.95)",
+      gradientTo: "rgba(14, 10, 20, 0.8)",
+      href: "/track/demo",
+      isHero: true,
+    },
+    {
+      icon: Trophy,
+      title: t('card.leaderboard.title'),
+      description: t('card.leaderboard.desc'),
+      tags: ["Gamified", "Rankings", "Badges"],
+      glowColor: "#f59e0b",
+      gradientFrom: "rgba(10, 10, 10, 0.95)",
+      gradientTo: "rgba(16, 14, 8, 0.8)",
+      href: "/leaderboard",
     },
   ];
 
   const heroCards = features.slice(0, 2);
-  const standardCards = features.slice(2);
+  const utilityCards = features.slice(2, 4); // Community + AI
+  const toolCards = features.slice(4);       // Analytics (only 1)
+
+  const newHeroCards = newFeatures.slice(0, 2);
+  const newStandardCards = newFeatures.slice(2);
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-4">
-      {/* Hero cards — 2 wide */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        {heroCards.map((feature, index) => (
-          <FeatureCard key={index} index={index} {...feature} />
-        ))}
-      </div>
+    <div className="w-full max-w-6xl mx-auto px-4 space-y-16">
+      {/* ─── Section 1: Core Actions ─── */}
+      <section>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mb-8"
+        >
+          <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-white/20 mb-1">
+            {t('cta.core_actions')}
+          </h2>
+          <div className="w-12 h-0.5 bg-[--accent] rounded-full" />
+        </motion.div>
 
-      {/* Standard cards — 4 in a row on large, 2 on medium */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {standardCards.map((feature, index) => (
-          <FeatureCard key={index + 2} index={index + 2} {...feature} />
-        ))}
-      </div>
+        {/* 2 hero cards side by side */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {heroCards.map((feature, index) => (
+            <FeatureCard key={index} index={index} {...feature} />
+          ))}
+        </div>
+      </section>
+
+      {/* ─── Section 2: Explore & Connect ─── */}
+      <section>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mb-8"
+        >
+          <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-white/20 mb-1">
+            {t('cta.explore')}
+          </h2>
+          <div className="w-12 h-0.5 bg-gradient-to-r from-[--accent] to-[--cyan] rounded-full opacity-60" />
+        </motion.div>
+
+        {/* 2 + 1 layout for balanced breathing room */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+          {utilityCards.map((feature, index) => (
+            <FeatureCard key={index + 2} index={index + 2} {...feature} />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {toolCards.map((feature, index) => (
+            <FeatureCard key={index + 4} index={index + 4} {...feature} />
+          ))}
+        </div>
+      </section>
+
+      {/* ─── Section 3: Intelligence & Tracking ─── */}
+      <section>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mb-8"
+        >
+          <div className="flex items-center gap-3 mb-1">
+            <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-white/20">
+              {t('cta.tracking')}
+            </h2>
+            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 uppercase tracking-wider">
+              {t('common.new')}
+            </span>
+          </div>
+          <div className="w-12 h-0.5 bg-gradient-to-r from-[--cyan] to-amber-500 rounded-full opacity-60" />
+        </motion.div>
+
+        {/* 2 hero-sized cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          {newHeroCards.map((feature, index) => (
+            <FeatureCard key={index + 6} index={index + 6} {...feature} />
+          ))}
+        </div>
+
+        {/* 2 standard cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {newStandardCards.map((feature, index) => (
+            <FeatureCard key={index + 8} index={index + 8} {...feature} />
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

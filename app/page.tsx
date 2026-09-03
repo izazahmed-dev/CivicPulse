@@ -4,11 +4,8 @@ import NarrativeOverlays from '@/components/NarrativeOverlays';
 
 export default function Home() {
   return (
-    <main className="relative min-h-[500vh] bg-[#0a192f]">
-      {/* 1. Underlying Canvas Layer (Sticky/Fixed) */}
+    <main className="relative min-h-[500vh] bg-[#050505]">
       <CivicScrollyCanvas />
-      
-      {/* 2. Scrollable Narrative Text Layer */}
       <NarrativeOverlays />
     </main>
   );

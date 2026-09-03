@@ -1,0 +1,4 @@
+.next/
+node_modules/
+data/demo-store/state.json
+

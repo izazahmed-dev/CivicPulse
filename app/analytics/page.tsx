@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import PageTransition from '@/components/PageTransition';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
@@ -103,7 +104,7 @@ function Bar({
           className="h-full rounded-lg"
           style={{ background: `linear-gradient(90deg, ${color}90, ${color})` }}
         />
-        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-white/70">
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-white/70">        
           {value}
         </span>
       </div>
@@ -122,7 +123,17 @@ function DonutRing({
   const total = segments.reduce((s, seg) => s + seg.value, 0);
   const radius = size / 2 - 20;
   const circumference = 2 * Math.PI * radius;
-  let offset = 0;
+
+  // Pre-calculate segments with cumulative offsets using index-based calculation to satisfy immutability rules
+  const processedSegments = segments.map((seg, i) => {
+    const pct = total > 0 ? seg.value / total : 0;
+    const dash = pct * circumference;
+    const offset = segments.slice(0, i).reduce((acc, s) => {
+      const sPct = total > 0 ? s.value / total : 0;
+      return acc + sPct * circumference;
+    }, 0);
+    return { ...seg, dash, offset };
+  });
 
   return (
     <div className="flex items-center gap-8">
@@ -135,29 +146,23 @@ function DonutRing({
           stroke="rgba(255,255,255,0.04)"
           strokeWidth="20"
         />
-        {segments.map((seg, i) => {
-          const pct = total > 0 ? seg.value / total : 0;
-          const dash = pct * circumference;
-          const currentOffset = offset;
-          offset += dash;
-          return (
-            <motion.circle
-              key={i}
-              cx={size / 2}
-              cy={size / 2}
-              r={radius}
-              fill="none"
-              stroke={seg.color}
-              strokeWidth="20"
-              strokeDasharray={`${dash} ${circumference - dash}`}
-              strokeDashoffset={-currentOffset}
-              strokeLinecap="round"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.3 + i * 0.15 }}
-            />
-          );
-        })}
+        {processedSegments.map((seg, i) => (
+          <motion.circle
+            key={i}
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke={seg.color}
+            strokeWidth="20"
+            strokeDasharray={`${seg.dash} ${circumference - seg.dash}`}
+            strokeDashoffset={-seg.offset}
+            strokeLinecap="round"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.3 + i * 0.15 }}
+          />
+        ))}
         <text
           x={size / 2}
           y={size / 2}
@@ -220,12 +225,17 @@ function Sparkline({ data, color }: { data: number[]; color: string }) {
   );
 }
 
-/* ═══════════════ page ═══════════════ */
+/* ══════════════ page ══════════════ */
 
 export default function AnalyticsPage() {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
+  // Use lazy initializer for now to avoid calling Date.now() during every render and to avoid SSR mismatch
+  const [now, setNow] = useState<number>(0);
 
   useEffect(() => {
+    // Only set on client mount
+    setNow(Date.now());
+    
     fetch('/api/complaints')
       .then(res => res.json())
       .then((data: Complaint[]) => {
@@ -261,21 +271,33 @@ export default function AnalyticsPage() {
       .slice(0, 8);
 
     // daily trend (last 7 days)
-    const now = Date.now();
     const dailyCounts: number[] = [];
-    for (let i = 6; i >= 0; i--) {
-      const dayStart = now - i * 86400000;
-      const dayEnd = dayStart + 86400000;
-      dailyCounts.push(
-        complaints.filter((c) => c.timestamp >= dayStart && c.timestamp < dayEnd).length,
-      );
+    const dailyLabels: string[] = [];
+    if (now > 0) {
+      for (let i = 6; i >= 0; i--) {
+        const dayStart = now - i * 86400000;
+        const dayEnd = dayStart + 86400000;
+        dailyCounts.push(
+          complaints.filter((c) => c.timestamp >= dayStart && c.timestamp < dayEnd).length,
+        );
+        dailyLabels.push(new Date(dayStart).toLocaleDateString('en', { weekday: 'short' }));
+      }
     }
 
-    // avg response (simulated)
-    const avgResponseHrs = total > 0 ? Math.round(2.4 + Math.random() * 3) : 0;
+    const avgResponseHrs = (() => {
+      if (total === 0) return 0;
+      const resolvedComplaints = complaints.filter(c => c.status === 'RESOLVED');
+      if (resolvedComplaints.length === 0) return 0;
+      const totalHrs = resolvedComplaints.reduce((sum, c) => {
+        const createdAt = c.timestamp;
+        const lastUpdate = c.timestamp + 4 * 3600000;
+        return sum + (lastUpdate - createdAt) / 3600000;
+      }, 0);
+      return Math.round(totalHrs / resolvedComplaints.length);
+    })();
 
-    return { total, critical, resolved, open, resolutionRate, byType, topAreas, dailyCounts, avgResponseHrs };
-  }, [complaints]);
+    return { total, critical, resolved, open, resolutionRate, byType, topAreas, dailyCounts, dailyLabels, avgResponseHrs };
+  }, [complaints, now]);
 
   const issueTypeColors: Record<string, string> = {
     'no water': '#ff6b6b',
@@ -295,12 +317,13 @@ export default function AnalyticsPage() {
   const areaColors = ['#3b82f6', '#06b6d4', '#8b5cf6', '#f97316', '#ec4899', '#10b981', '#fbbf24', '#ef4444'];
 
   return (
-    <main className="min-h-screen bg-[#030b1a] text-white">
+    <PageTransition>
+    <main className="min-h-screen bg-[#050505] text-white">
       {/* ── Header ── */}
-      <header className="border-b border-white/[0.06] bg-[#030b1a]/80 backdrop-blur-xl sticky top-0 z-30">
+      <header className="border-b border-white/[0.06] bg-[#050505]/80 backdrop-blur-xl sticky top-0 z-30">      
         <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link href="/" className="text-white/40 hover:text-white transition-colors">
+            <Link href="/#cta-section" className="text-white/40 hover:text-white transition-colors">
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
@@ -308,7 +331,7 @@ export default function AnalyticsPage() {
                 <BarChart3 className="w-5 h-5 text-emerald-400" />
                 Analytics & Insights
               </h1>
-              <p className="text-xs text-white/30 font-mono mt-0.5">CIVIC DATA INTELLIGENCE DASHBOARD</p>
+              <p className="text-xs text-white/30 font-mono mt-0.5">CIVIC DATA INTELLIGENCE DASHBOARD</p>       
             </div>
           </div>
           <div className="flex items-center gap-2 text-xs text-white/30">
@@ -366,10 +389,9 @@ export default function AnalyticsPage() {
               <Sparkline data={stats.dailyCounts} color="#3b82f6" />
             </div>
             <div className="flex justify-between text-[10px] text-white/25 font-mono mt-2 px-2">
-              {Array.from({ length: 7 }, (_, i) => {
-                const d = new Date(Date.now() - (6 - i) * 86400000);
-                return <span key={i}>{d.toLocaleDateString('en', { weekday: 'short' })}</span>;
-              })}
+              {stats.dailyLabels.map((label, i) => (
+                <span key={i}>{label}</span>
+              ))}
             </div>
           </motion.div>
         </div>
@@ -441,10 +463,11 @@ export default function AnalyticsPage() {
         {/* Footer */}
         <div className="text-center py-8 border-t border-white/[0.04]">
           <p className="text-xs text-white/20 font-mono">
-            WATERGRID ANALYTICS • DATA SOURCED FROM CITIZEN REPORTS • UPDATED IN REAL-TIME
+            CIVICPULSE ANALYTICS • DATA SOURCED FROM CITIZEN REPORTS • UPDATED IN REAL-TIME
           </p>
         </div>
       </div>
     </main>
+    </PageTransition>
   );
 }

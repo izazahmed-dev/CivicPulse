@@ -5,8 +5,23 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import FeatureGrid from '@/components/FeatureGrid';
 import UserNavBadge from '@/components/UserNavBadge';
+import { useLanguage } from '@/context/LanguageContext';
+import { ArrowRight, ArrowDown, Zap } from 'lucide-react';
+
+const sectionVariants = {
+  hidden: { opacity: 0, y: 60 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
+  },
+};
 
 export default function NarrativeOverlays() {
+  const { t } = useLanguage();
+  const heatmapDesc = t('hero.heatmap_desc');
+  const [heatmapPart1, heatmapPart2] = heatmapDesc.split(/(?<=[.|।])\s+/) || [heatmapDesc, ''];
+
   return (
     <div className="relative z-10 w-full">
       {/* Top Nav */}
@@ -14,135 +29,168 @@ export default function NarrativeOverlays() {
         <UserNavBadge />
         <button
           onClick={() => document.getElementById('cta-section')?.scrollIntoView({ behavior: 'smooth' })}
-          className="px-5 py-2.5 text-xs font-bold tracking-widest text-emerald-400 border border-emerald-400/20 bg-slate-900/50 backdrop-blur-md rounded-full hover:bg-emerald-400/10 transition-all uppercase hover:scale-105"
+          className="group px-5 py-2.5 text-[10px] font-bold tracking-[0.15em] uppercase text-white/50 border border-white/10 bg-black/50 backdrop-blur-md rounded-full hover:border-[--accent]/40 hover:text-[--accent] transition-all duration-300"
         >
-          Skip System Intro
+          Skip Intro
+          <ArrowDown size={12} className="inline ml-2 group-hover:translate-y-0.5 transition-transform" />
         </button>
       </div>
 
-      {/* Act 1: Hero - Floating Text */}
+      {/* Act 1: Hero */}
       <section className="h-screen flex items-center justify-center p-6">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
+          variants={sectionVariants}
+          initial="hidden"
+          whileInView="visible"
           viewport={{ amount: 0.5 }}
-          className="text-center"
+          className="text-center max-w-5xl"
         >
-          <h2 className="text-5xl md:text-7xl lg:text-8xl font-black mb-4 text-white tracking-tight drop-shadow-[0_4px_30px_rgba(0,0,0,0.8)]">
-            Water Complaint
-            <br />
-            Heatmap
-          </h2>
-          <p className="text-lg md:text-xl text-white/80 font-light tracking-wide drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
-            Civic Technology for Tamil Nadu
+          <motion.div
+            initial={{ opacity: 0, scale: 0.5 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            viewport={{ amount: 0.5 }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[--accent]/20 bg-[--accent-dim] mb-8"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-[--accent] animate-pulse" />
+            <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-[--accent]">
+              Civic Intelligence Platform
+            </span>
+          </motion.div>
+
+          <h1 className="heading-xl text-white mb-6 drop-shadow-[0_4px_30px_rgba(0,0,0,0.8)]">
+            {t('hero.title')}
+          </h1>
+          <p className="text-lg md:text-xl text-white/50 font-light tracking-wide max-w-2xl mx-auto">
+            {t('hero.subtitle')}
           </p>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            viewport={{ amount: 0.5 }}
+            className="mt-12 animate-float"
+          >
+            <ArrowDown size={20} className="mx-auto text-white/20" />
+          </motion.div>
         </motion.div>
       </section>
 
-      {/* Act 2: The Problem - Floating Text */}
+      {/* Act 2: The Problem */}
       <section className="h-screen flex items-center justify-center p-6">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
+          variants={sectionVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ amount: 0.5 }}
+          className="max-w-4xl"
+        >
+          <p className="label-caps text-[--accent]/60 mb-4 tracking-[0.3em]">The Problem</p>
+          <h2 className="heading-lg text-white mb-8">
+            {t('hero.problem_title')}
+          </h2>
+          <p className="text-lg md:text-xl text-white/50 font-light leading-relaxed">
+            {t('hero.problem_desc')}
+          </p>
+          <div className="divider-glow mt-12 w-24" />
+        </motion.div>
+      </section>
+
+      {/* Act 3: Your Voice */}
+      <section className="h-screen flex items-center justify-center p-6">
+        <motion.div
+          variants={sectionVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ amount: 0.5 }}
+          className="max-w-4xl text-right"
+        >
+          <p className="label-caps text-[--accent]/60 mb-4 tracking-[0.3em]">Your Voice</p>
+          <h2 className="heading-lg text-white mb-8">
+            {t('hero.voice_title')}
+          </h2>
+          <p className="text-lg md:text-xl text-white/50 font-light leading-relaxed">
+            {t('hero.voice_desc')}
+          </p>
+          <div className="divider-glow mt-12 w-24 ml-auto" />
+        </motion.div>
+      </section>
+
+      {/* Act 4: The Heatmap */}
+      <section className="h-screen flex items-center justify-center p-6">
+        <motion.div
+          variants={sectionVariants}
+          initial="hidden"
+          whileInView="visible"
           viewport={{ amount: 0.5 }}
           className="text-center max-w-4xl"
         >
-          <h2 className="text-4xl md:text-6xl lg:text-7xl font-black mb-6 text-white tracking-tight drop-shadow-[0_4px_30px_rgba(0,0,0,0.8)]">
-            Water Scarcity is Silent
+          <p className="label-caps text-[--accent]/60 mb-4 tracking-[0.3em]">Real-Time Intelligence</p>
+          <h2 className="heading-lg text-white mb-8">
+            {t('hero.heatmap_title')}
           </h2>
-          <p className="text-lg md:text-2xl text-white/90 font-light leading-relaxed drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
-            Every day, thousands of taps run dry.
-            <br />
-            Without data, these problems remain <span className="font-semibold text-white">invisible</span>.
+          <p className="text-lg md:text-xl text-white/50 font-light leading-relaxed mb-6">
+            {heatmapPart1}
           </p>
+          {heatmapPart2 && (
+            <p className="text-xl md:text-2xl font-bold text-white">
+              {heatmapPart2}
+            </p>
+          )}
         </motion.div>
       </section>
 
-      {/* Act 3: Your Voice - Floating Text */}
+      {/* Act 5: Action */}
       <section className="h-screen flex items-center justify-center p-6">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
+          variants={sectionVariants}
+          initial="hidden"
+          whileInView="visible"
           viewport={{ amount: 0.5 }}
           className="text-center max-w-4xl"
         >
-          <h2 className="text-4xl md:text-6xl lg:text-7xl font-black mb-6 text-white tracking-tight drop-shadow-[0_4px_30px_rgba(0,0,0,0.8)]">
-            Your Voice is the Sensor
+          <p className="label-caps text-[--accent]/60 mb-4 tracking-[0.3em]">Take Action</p>
+          <h2 className="heading-lg text-white mb-8">
+            {t('hero.action_relief')}
           </h2>
-          <p className="text-lg md:text-2xl text-white/90 font-light leading-relaxed drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
-            We don&apos;t need expensive sensors. We need <span className="font-semibold text-white">you</span>.
-            <br />
-            A single report puts a pin on the map.
+          <p className="text-lg md:text-xl text-white/50 font-light leading-relaxed mb-10">
+            {t('hero.action_desc')}
           </p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            viewport={{ amount: 0.5 }}
+            className="flex items-center justify-center gap-4"
+          >
+            <Link href="/report" className="btn-accent">
+              Report Now <ArrowRight size={16} />
+            </Link>
+            <Link href="/dashboard" className="btn-outline">
+              View Dashboard
+            </Link>
+          </motion.div>
         </motion.div>
       </section>
 
-      {/* Act 4: The Heatmap - Floating Text */}
-      <section className="h-screen flex items-center justify-center p-6">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          viewport={{ amount: 0.5 }}
-          className="text-center max-w-4xl"
-        >
-          <h2 className="text-4xl md:text-6xl lg:text-7xl font-black mb-6 text-white tracking-tight drop-shadow-[0_4px_30px_rgba(0,0,0,0.8)]">
-            From Noise to Signal
-          </h2>
-          <p className="text-lg md:text-2xl text-white/90 font-light leading-relaxed mb-4 drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
-            Individual complaints are isolated.
-          </p>
-          <p className="text-xl md:text-3xl font-bold text-white drop-shadow-[0_4px_20px_rgba(0,0,0,0.8)]">
-            Together, they form a Heatmap of Urgency.
-          </p>
-        </motion.div>
-      </section>
-
-      {/* Act 5: Action - Floating Text */}
-      <section className="h-screen flex items-center justify-center p-6">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          viewport={{ amount: 0.5 }}
-          className="text-center max-w-4xl"
-        >
-          <h2 className="text-4xl md:text-6xl lg:text-7xl font-black mb-6 text-white tracking-tight drop-shadow-[0_4px_30px_rgba(0,0,0,0.8)]">
-            Action &amp; Relief
-          </h2>
-          <p className="text-lg md:text-2xl text-white/90 font-light leading-relaxed drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
-            Resources are deployed efficiently.
-            <br />
-            Water flows again. The map turns green.
-          </p>
-        </motion.div>
-      </section>
-
-      {/* ====== Act 6: CTAs — Redesigned ====== */}
-      <section id="cta-section" className="relative min-h-screen py-32 px-6 overflow-hidden bg-[#030b1a] z-20">
-        {/* Floating background orbs */}
+      {/* ====== Act 6: CTAs & Features ====== */}
+      <section id="cta-section" className="relative min-h-screen py-32 px-6 overflow-hidden bg-[#050505] z-20">
+        {/* Background Effects */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div
-            className="animate-orb-1 absolute top-[10%] left-[15%] w-[500px] h-[500px] rounded-full opacity-[0.04]"
-            style={{ background: 'radial-gradient(circle, #3b82f6, transparent 70%)' }}
+            className="animate-orb-1 absolute top-[10%] left-[15%] w-[500px] h-[500px] rounded-full opacity-[0.03]"
+            style={{ background: 'radial-gradient(circle, var(--accent), transparent 70%)' }}
           />
           <div
-            className="animate-orb-2 absolute bottom-[15%] right-[10%] w-[600px] h-[600px] rounded-full opacity-[0.03]"
-            style={{ background: 'radial-gradient(circle, #8b5cf6, transparent 70%)' }}
-          />
-          <div
-            className="animate-orb-1 absolute top-[50%] left-[60%] w-[400px] h-[400px] rounded-full opacity-[0.03]"
-            style={{ background: 'radial-gradient(circle, #06b6d4, transparent 70%)' }}
+            className="animate-orb-2 absolute bottom-[15%] right-[10%] w-[600px] h-[600px] rounded-full opacity-[0.02]"
+            style={{ background: 'radial-gradient(circle, var(--cyan), transparent 70%)' }}
           />
         </div>
 
-        {/* Gradient top edge */}
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/30 to-transparent" />
+        <div className="divider-glow absolute top-0 left-0 right-0" />
 
-        {/* Headline */}
+        {/* Section Header */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -150,28 +198,49 @@ export default function NarrativeOverlays() {
           viewport={{ once: true }}
           className="text-center mb-20 relative z-10"
         >
-          <p className="text-sm font-semibold tracking-[0.3em] uppercase text-blue-400/70 mb-4">
-            Your Civic Toolkit
+          <p className="label-caps text-[--accent]/60 mb-6 tracking-[0.3em]">
+            {t('cta.core_actions')}
           </p>
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight">
+          <h1 className="heading-xl">
             <span
               className="animate-gradient-text inline-block"
               style={{
-                backgroundImage:
-                  'linear-gradient(135deg, #60a5fa, #a78bfa, #06b6d4, #34d399, #60a5fa)',
+                backgroundImage: 'linear-gradient(135deg, var(--accent), #00d4ff, var(--accent), #00ff87)',
               }}
             >
               Take Action
             </span>
           </h1>
-          <p className="mt-6 text-lg text-white/40 max-w-xl mx-auto leading-relaxed">
-            Every tool you need to report, scan, track, and solve water problems in your community.
+          <p className="mt-6 text-base text-white/30 max-w-lg mx-auto leading-relaxed">
+            Every tool you need to report, track, and solve civic problems in your community.
           </p>
         </motion.div>
 
-        {/* Bento Grid */}
+        {/* Feature Grid */}
         <div className="relative z-10">
           <FeatureGrid />
+        </div>
+
+        {/* Marquee Banner */}
+        <div className="relative z-10 mt-32 overflow-hidden py-6 border-y border-white/[0.04]">
+          <div className="animate-marquee whitespace-nowrap flex items-center gap-8">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <span key={i} className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/10 flex items-center gap-8">
+                <span>Report</span>
+                <span className="text-[--accent]/20">•</span>
+                <span>Dashboard</span>
+                <span className="text-[--accent]/20">•</span>
+                <span>Community</span>
+                <span className="text-[--accent]/20">•</span>
+                <span>AI Powered</span>
+                <span className="text-[--accent]/20">•</span>
+                <span>Forecast</span>
+                <span className="text-[--accent]/20">•</span>
+                <span>Bounties</span>
+                <span className="text-[--accent]/20">•</span>
+              </span>
+            ))}
+          </div>
         </div>
 
         {/* Footer */}
@@ -180,30 +249,30 @@ export default function NarrativeOverlays() {
           whileInView={{ opacity: 1 }}
           transition={{ duration: 1, delay: 0.5 }}
           viewport={{ once: true }}
-          className="relative z-10 mt-32 pt-12 border-t border-white/[0.06]"
+          className="relative z-10 mt-16 pt-12"
         >
           <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 px-4">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center">
-                <span className="text-white font-black text-sm">W</span>
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-[--accent] flex items-center justify-center">
+                <Zap size={14} className="text-black" />
               </div>
-              <span className="text-white/80 font-bold tracking-tight text-lg">
-                WaterGrid
+              <span className="text-white/80 font-extrabold tracking-tight text-sm uppercase">
+                CivicPulse
               </span>
             </div>
 
-            <p className="text-sm text-white/25 font-mono text-center">
-              System Status: <span className="text-emerald-500/60">ACTIVE</span> • Civic Intelligence Platform • Tamil Nadu
+            <p className="text-[10px] text-white/20 font-mono text-center tracking-wider">
+              Status: <span className="text-[--accent]/60">ONLINE</span> • Civic Intelligence Platform
             </p>
 
             <div className="flex items-center gap-6">
-              <Link href="/dashboard" className="text-xs text-white/30 hover:text-white/60 transition-colors">
+              <Link href="/dashboard" className="text-[10px] text-white/25 hover:text-[--accent] transition-colors uppercase tracking-wider font-semibold">
                 Dashboard
               </Link>
-              <Link href="/report" className="text-xs text-white/30 hover:text-white/60 transition-colors">
+              <Link href="/report" className="text-[10px] text-white/25 hover:text-[--accent] transition-colors uppercase tracking-wider font-semibold">
                 Report
               </Link>
-              <Link href="/community" className="text-xs text-white/30 hover:text-white/60 transition-colors">
+              <Link href="/community" className="text-[10px] text-white/25 hover:text-[--accent] transition-colors uppercase tracking-wider font-semibold">
                 Community
               </Link>
             </div>

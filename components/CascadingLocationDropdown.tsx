@@ -99,8 +99,7 @@ function StyledSelect({
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: -8, scale: 0.97 }}
                             transition={{ duration: 0.15 }}
-                            className="absolute z-[100] w-full mt-2 rounded-xl border border-white/[0.08] shadow-2xl shadow-black/40 overflow-hidden max-h-60 overflow-y-auto"
-                            style={{ background: 'linear-gradient(180deg, #141e30, #0f1824)' }}
+                            className="absolute z-[100] w-full mt-2 rounded-xl border border-white/[0.08] shadow-2xl shadow-black/40 overflow-hidden max-h-60 overflow-y-auto bg-gradient-to-b from-[#141e30] to-[#0f1824]"
                         >
                             {options.map((opt, i) => (
                                 <li

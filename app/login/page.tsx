@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Phone, Shield, User, ArrowRight, CheckCircle, Droplets, Waves, Lock, RefreshCw } from 'lucide-react';
+import { Phone, Shield, User, ArrowRight, CheckCircle, Zap, Activity, Lock, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -153,7 +153,7 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#030b1a] flex items-center justify-center p-4 relative overflow-hidden">
+    <main className="min-h-screen bg-[#050505] flex items-center justify-center p-4 relative overflow-hidden">
       {/* ── Animated background ── */}
       <div className="absolute inset-0 overflow-hidden">
         {/* Gradient orbs */}
@@ -187,7 +187,7 @@ export default function LoginPage() {
               },
             }}
           >
-            <Droplets size={18 + i * 10} />
+            <Zap size={18 + i * 10} />
           </motion.div>
         ))}
       </div>
@@ -197,14 +197,8 @@ export default function LoginPage() {
         href="/"
         className="absolute top-6 left-6 text-white/30 hover:text-white/70 flex items-center gap-2 z-50 text-sm transition-colors"
       >
-        <Waves size={18} /> WaterGrid
+        <Activity size={18} /> CivicPulse
       </Link>
-
-      {/* ── Security badge ── */}
-      <div className="absolute top-6 right-6 flex items-center gap-2 text-[10px] text-white/20 font-mono z-50">
-        <Lock size={12} />
-        <span>256-BIT ENCRYPTED</span>
-      </div>
 
       {/* ── Main card ── */}
       <motion.div
@@ -217,10 +211,10 @@ export default function LoginPage() {
           {/* Logo */}
           <div className="flex items-center gap-3 mb-8">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-              <Droplets className="text-white" size={24} />
+              <Zap className="text-white" size={24} />
             </div>
             <div>
-              <h1 className="text-2xl font-black text-white tracking-tight">WaterGrid</h1>
+              <h1 className="text-2xl font-black text-white tracking-tight">CivicPulse</h1>
               <p className="text-[11px] text-white/30 tracking-widest font-mono">SECURE LOGIN</p>
             </div>
           </div>
@@ -244,7 +238,7 @@ export default function LoginPage() {
                   style={{
                     color:
                       step === s
-                        ? '#030b1a'
+                        ? '#050505'
                         : ['phone', 'otp', 'name'].indexOf(step) > i || step === 'done'
                         ? '#10b981'
                         : 'rgba(255,255,255,0.25)',
@@ -337,12 +331,12 @@ export default function LoginPage() {
 
                 <div className="flex items-center gap-3 mt-6">
                   <div className="flex-1 h-px bg-white/[0.06]" />
-                  <span className="text-[10px] text-white/20">PROTECTED BY WATERGRID</span>
+                  <span className="text-[10px] text-white/20">PROTECTED BY CIVICPULSE</span>
                   <div className="flex-1 h-px bg-white/[0.06]" />
                 </div>
 
                 <p className="text-[11px] text-white/20 mt-4 text-center leading-relaxed">
-                  By continuing, you agree to WaterGrid&apos;s Terms of Service.
+                  By continuing, you agree to CivicPulse&apos;s Terms of Service.
                   <br />
                   Your number is used only for verification.
                 </p>
@@ -472,9 +466,7 @@ export default function LoginPage() {
                   )}
                 </div>
 
-                <p className="text-[10px] text-white/15 text-center mt-6 flex items-center justify-center gap-1">
-                  <Lock size={10} /> Demo: Any 6-digit code will work
-                </p>
+
               </motion.div>
             )}
 

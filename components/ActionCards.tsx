@@ -3,6 +3,7 @@
 import React from "react";
 import { Plus, Map, ChevronRight, Droplets, Users } from "lucide-react";
 import Link from "next/link";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface ActionCardProps {
   icon: React.ElementType;
@@ -55,12 +56,14 @@ const ActionCard: React.FC<ActionCardProps> = ({
 };
 
 export default function ActionCards() {
+  const { t } = useLanguage();
+
   return (
     <div className="flex flex-col gap-4 w-full max-w-2xl mx-auto p-4">
       <ActionCard
         icon={Plus}
-        title="Report Water Issue"
-        description="Submit a complaint in under 30 seconds. No login required."
+        title={t('card.report.title')}
+        description={t('card.report.desc')}
         bgColorClass="bg-[#2563eb]"
         hoverColorClass="hover:bg-[#1d4ed8]"
         circleColorClass="bg-white/20"
@@ -69,19 +72,9 @@ export default function ActionCards() {
       />
 
       <ActionCard
-        icon={Droplets}
-        title="Scan Water Quality"
-        description="AI-powered analysis of your tap water. Camera or upload."
-        bgColorClass="bg-gradient-to-r from-cyan-700 to-blue-800"
-        hoverColorClass="hover:from-cyan-600 hover:to-blue-700"
-        circleColorClass="bg-cyan-400/20"
-        href="/scan"
-      />
-
-      <ActionCard
         icon={Users}
-        title="Community Chat"
-        description="Discuss water issues with your neighbors. Upvote & reply."
+        title={t('card.community.title')}
+        description={t('card.community.desc')}
         bgColorClass="bg-gradient-to-r from-violet-800 to-purple-900"
         hoverColorClass="hover:from-violet-700 hover:to-purple-800"
         circleColorClass="bg-violet-400/20"
@@ -90,8 +83,8 @@ export default function ActionCards() {
 
       <ActionCard
         icon={Map}
-        title="View Live Dashboard"
-        description="See complaint heatmap and area-wise water supply status."
+        title={t('card.dashboard.title')}
+        description={t('card.dashboard.desc')}
         bgColorClass="bg-[#1e3a8a]"
         hoverColorClass="hover:bg-[#172554]"
         circleColorClass="bg-[#3b82f6]/20"

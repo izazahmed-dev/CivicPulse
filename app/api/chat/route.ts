@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const SYSTEM_PROMPT = `You are the WaterGrid Assistant, the official AI support for the India Water Monitoring Platform.
+const SYSTEM_PROMPT = `You are the CivicPulse Assistant, the official AI support for the India Water Monitoring Platform.
 Your purpose is to assist citizens with reporting water issues, checking city water status, and understanding conservation efforts.
 
 Capabilities:
@@ -46,7 +46,7 @@ async function callGeminiWithRetry(apiKey: string, geminiContents: unknown[], re
 
         if (response.status === 429 && attempt < retries - 1) {
             const waitMs = Math.pow(2, attempt) * 1000 + Math.random() * 500;
-            console.log(`[WaterGrid Chat] Rate limited (429). Retrying in ${Math.round(waitMs)}ms (attempt ${attempt + 1}/${retries})...`);
+            console.log(`[CivicPulse Chat] Rate limited (429). Retrying in ${Math.round(waitMs)}ms (attempt ${attempt + 1}/${retries})...`);
             await new Promise(resolve => setTimeout(resolve, waitMs));
             continue;
         }
@@ -77,7 +77,7 @@ Your complaint will be tracked with a unique ID. You can monitor it on the **Das
     if (msg.includes('dashboard') || msg.includes('heatmap') || msg.includes('map')) {
         return `📊 **Dashboard & Heatmap:**
 
-The WaterGrid Dashboard at \`/dashboard\` shows real-time water status across your city:
+The CivicPulse Dashboard at \`/dashboard\` shows real-time water status across your city:
 
 - 🔴 **Red** — Critical issue (no water / contamination)
 - 🟡 **Yellow** — Warning (low pressure / leakage)
@@ -127,7 +127,7 @@ All data is sourced from citizen reports and updated in real-time.`;
     }
 
     if (msg.includes('hello') || msg.includes('hi') || msg.includes('hey') || msg.includes('help')) {
-        return `👋 Hello! I'm the **WaterGrid AI Assistant**.
+        return `👋 Hello! I'm the **CivicPulse AI Assistant**.
 
 I can help you with:
 
@@ -140,7 +140,7 @@ I can help you with:
 What would you like to know about?`;
     }
 
-    return `💧 I'm the **WaterGrid Assistant** and I can help you with water-related issues!
+    return `💧 I'm the **CivicPulse Assistant** and I can help you with water-related issues!
 
 Here's what I can assist with:
 - **Report an issue** → Go to \`/report\`
@@ -157,7 +157,7 @@ export async function POST(req: Request) {
 
         const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) {
-            console.error('[WaterGrid Chat] Missing GEMINI_API_KEY');
+            console.error('[CivicPulse Chat] Missing GEMINI_API_KEY');
             return NextResponse.json({
                 reply: 'The AI service is not configured yet. Please add your GEMINI_API_KEY to .env.local.'
             });
@@ -173,7 +173,7 @@ export async function POST(req: Request) {
         });
         geminiContents.push({
             role: 'model',
-            parts: [{ text: "Understood! I'm the WaterGrid Assistant. I'll help citizens with water issues, reporting, dashboard info, and the platform features. How can I assist you today? 💧" }],
+            parts: [{ text: "Understood! I'm the CivicPulse Assistant. I'll help citizens with water issues, reporting, dashboard info, and the platform features. How can I assist you today? 💧" }],
         });
 
         // Add conversation history
@@ -189,7 +189,7 @@ export async function POST(req: Request) {
 
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error('[WaterGrid Chat] Gemini API error:', response.status, errorText);
+                console.error('[CivicPulse Chat] Gemini API error:', response.status, errorText);
 
                 // Use smart fallback for rate limits or other API errors
                 const lastUserMsg = messages.filter((m: { role: string }) => m.role === 'user').pop();
@@ -207,7 +207,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ reply: text });
 
         } catch (retryError) {
-            console.error('[WaterGrid Chat] All retries failed:', retryError);
+            console.error('[CivicPulse Chat] All retries failed:', retryError);
             const lastUserMsg = messages.filter((m: { role: string }) => m.role === 'user').pop();
             return NextResponse.json({
                 reply: getSmartFallback(lastUserMsg?.content || '')
@@ -215,7 +215,7 @@ export async function POST(req: Request) {
         }
 
     } catch (error) {
-        console.error('[WaterGrid Chat] Server error:', error);
+        console.error('[CivicPulse Chat] Server error:', error);
         return NextResponse.json({
             reply: 'A network error occurred. Please check your connection and try again.'
         });

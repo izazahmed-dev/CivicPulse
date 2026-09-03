@@ -10,11 +10,13 @@ import {
     RotateCcw,
     ChevronDown,
     Droplets,
-    ExternalLink,
     Copy,
     Check,
     Bot,
     User,
+    Zap,
+    Cpu,
+    ArrowRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useChat } from '@/context/ChatContext';
@@ -28,14 +30,14 @@ type Message = {
 /* ── animated typing dots ── */
 function TypingIndicator() {
     return (
-        <div className="flex items-center gap-1.5 px-4 py-3">
+        <div className="flex items-center gap-1.5 px-3 py-2">
             {[0, 1, 2].map((i) => (
                 <motion.div
                     key={i}
-                    className="w-2 h-2 rounded-full bg-emerald-400/60"
-                    animate={{ y: [0, -8, 0], opacity: [0.4, 1, 0.4], scale: [1, 1.2, 1] }}
+                    className="w-1.5 h-1.5 rounded-full bg-cyan-400"
+                    animate={{ y: [0, -6, 0], opacity: [0.3, 1, 0.3] }}
                     transition={{
-                        duration: 0.9,
+                        duration: 1,
                         repeat: Infinity,
                         delay: i * 0.15,
                         ease: 'easeInOut',
@@ -57,13 +59,13 @@ function CopyButton({ text }: { text: string }) {
     return (
         <button
             onClick={copy}
-            className="opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-white/10 transition-all"
+            className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] transition-all border border-white/[0.05]"
             title="Copy message"
         >
             {copied ? (
-                <Check className="w-3.5 h-3.5 text-emerald-400" />
+                <Check className="w-3 h-3 text-cyan-400" />
             ) : (
-                <Copy className="w-3.5 h-3.5 text-white/30" />
+                <Copy className="w-3 h-3 text-white/40 group-hover:text-white/70" />
             )}
         </button>
     );
@@ -71,42 +73,39 @@ function CopyButton({ text }: { text: string }) {
 
 /* ── format markdown-lite text ── */
 function FormattedText({ content }: { content: string }) {
-    // Simple markdown rendering for bold, links, and bullets
+    // Advanced markdown rendering for bold, links, code, bullets
     const lines = content.split('\n');
     return (
-        <div className="space-y-1.5">
+        <div className="space-y-2 text-[13.5px] leading-relaxed">
             {lines.map((line, i) => {
-                if (!line.trim()) return <div key={i} className="h-1" />;
+                if (!line.trim()) return <div key={i} className="h-1.5" />;
 
-                // Bold text
-                let processed = line.replace(/\*\*(.*?)\*\*/g, '<b class="font-semibold text-white">$1</b>');
-                // Inline code
-                processed = processed.replace(/`(.*?)`/g, '<code class="px-1.5 py-0.5 rounded bg-white/10 text-emerald-300 text-[12px] font-mono">$1</code>');
-                // Bullet points
+                const processed = line
+                    .replace(/\*\*(.*?)\*\*/g, '<b class="font-bold text-white">$1</b>')
+                    .replace(/`(.*?)`/g, '<code class="px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 text-[12px] font-mono">$1</code>');
+
                 const isBullet = /^[\-\*•]\s/.test(line.trim());
-
                 if (isBullet) {
                     const bulletContent = processed.replace(/^[\-\*•]\s/, '');
                     return (
-                        <div key={i} className="flex items-start gap-2 ml-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/50 mt-2 flex-shrink-0" />
-                            <span dangerouslySetInnerHTML={{ __html: bulletContent }} />
+                        <div key={i} className="flex items-start gap-2.5 ml-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 mt-2 flex-shrink-0 shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
+                            <span className="text-white/80" dangerouslySetInnerHTML={{ __html: bulletContent }} />
                         </div>
                     );
                 }
 
-                // Numbered items
                 const numberedMatch = line.trim().match(/^(\d+[.)]\s)(.*)/);
                 if (numberedMatch) {
                     return (
                         <div key={i} className="flex items-start gap-2 ml-1">
-                            <span className="text-emerald-400/70 font-semibold text-[12px] mt-0.5 min-w-[18px]">{numberedMatch[1]}</span>
-                            <span dangerouslySetInnerHTML={{ __html: processed.replace(/^\d+[.)]\s/, '') }} />
+                            <span className="text-cyan-400 font-bold text-[12px] mt-0.5 min-w-[20px]">{numberedMatch[1]}</span>
+                            <span className="text-white/80" dangerouslySetInnerHTML={{ __html: processed.replace(/^\d+[.)]\s/, '') }} />
                         </div>
                     );
                 }
 
-                return <p key={i} dangerouslySetInnerHTML={{ __html: processed }} />;
+                return <p key={i} className="text-white/80" dangerouslySetInnerHTML={{ __html: processed }} />; 
             })}
         </div>
     );
@@ -118,46 +117,44 @@ function MessageBubble({ msg }: { msg: Message }) {
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 14, scale: 0.97 }}
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-5 group`}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-6 group`}
         >
-            <div className={`flex items-start gap-2.5 max-w-[88%] ${isUser ? 'flex-row-reverse' : ''}`}>
+            <div className={`flex items-end gap-3 max-w-[85%] ${isUser ? 'flex-row-reverse' : ''}`}>
                 {/* Avatar */}
                 <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: 'spring', stiffness: 400, damping: 20, delay: 0.1 }}
-                    className={`w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center shadow-lg ${isUser
-                        ? 'bg-gradient-to-br from-blue-500 to-indigo-600 shadow-blue-500/20'
-                        : 'bg-gradient-to-br from-emerald-500 to-teal-500 shadow-emerald-500/20'
-                        }`}
+                    whileHover={{ scale: 1.1, rotate: isUser ? -10 : 10 }}
+                    className={`w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center shadow-lg ${  
+                        isUser
+                            ? 'bg-gradient-to-br from-indigo-500 to-purple-600 shadow-indigo-500/25 border border-indigo-400/30'
+                            : 'bg-gradient-to-br from-cyan-400 to-blue-600 shadow-cyan-500/25 border border-cyan-400/30'
+                    }`}
                 >
-                    {isUser ? (
-                        <User className="w-4 h-4 text-white" />
-                    ) : (
-                        <Bot className="w-4 h-4 text-white" />
-                    )}
+                    {isUser ? <User className="w-4 h-4 text-white" /> : <Bot className="w-4 h-4 text-white" />} 
                 </motion.div>
 
-                {/* Message content */}
-                <div className="flex flex-col gap-1.5">
+                {/* Message Content */}
+                <div className={`flex flex-col gap-1.5 ${isUser ? 'items-end' : 'items-start'}`}>
                     <div
-                        className={`rounded-2xl px-4 py-3 text-[13.5px] leading-[1.65] ${isUser
-                            ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-tr-sm shadow-lg shadow-blue-600/15'
-                            : 'bg-white/[0.04] border border-white/[0.07] text-white/80 rounded-tl-sm backdrop-blur-sm'
-                            }`}
+                        className={`px-4 py-3.5 relative overflow-hidden backdrop-blur-xl ${
+                            isUser
+                                ? 'bg-gradient-to-br from-indigo-500/90 to-purple-600/90 text-white rounded-2xl rounded-br-sm shadow-[0_8px_32px_rgba(99,102,241,0.2)] border border-indigo-400/30'
+                                : 'bg-white/[0.03] text-white rounded-2xl rounded-bl-sm shadow-[0_8px_32px_rgba(0,0,0,0.3)] border border-white/[0.08]'
+                        }`}
                     >
-                        {isUser ? (
-                            <p>{msg.content}</p>
-                        ) : (
-                            <FormattedText content={msg.content} />
+                        {/* Shimmer effect for AI messages */}
+                        {!isUser && (
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
                         )}
+                        {isUser ? <p className="text-[13.5px] leading-relaxed">{msg.content}</p> : <FormattedText content={msg.content} />}
                     </div>
-                    <div className={`flex items-center gap-2 px-1 ${isUser ? 'justify-end' : ''}`}>
-                        <span className="text-[10px] text-white/15 font-medium tabular-nums">
-                            {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+
+                    {/* Metadata */}
+                    <div className={`flex items-center gap-2 px-1 ${isUser ? 'justify-end flex-row-reverse' : ''}`}>
+                        <span className="text-[10px] text-white/30 font-medium tracking-wider uppercase">       
+                            {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}      
                         </span>
                         {!isUser && <CopyButton text={msg.content} />}
                     </div>
@@ -168,50 +165,26 @@ function MessageBubble({ msg }: { msg: Message }) {
 }
 
 /* ── suggestion chip ── */
-function SuggestionChip({ text, icon, onClick }: { text: string; icon: string; onClick: () => void }) {
+function SuggestionChip({ text, icon, iconColor, onClick }: { text: string; icon: any; iconColor: string; onClick: () => void }) {
+    const Icon = icon;
     return (
         <motion.button
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            whileHover={{ scale: 1.02, y: -1 }}
+            whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.06)' }}
             whileTap={{ scale: 0.98 }}
             onClick={onClick}
-            className="flex items-center gap-2.5 px-4 py-3 rounded-xl text-[13px] text-white/55 bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.07] hover:text-white/80 hover:border-emerald-500/30 transition-all cursor-pointer text-left group"
+            className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:border-white/[0.1] transition-all cursor-pointer text-left group w-full relative overflow-hidden"
         >
-            <span className="text-base">{icon}</span>
-            <span className="group-hover:text-white/80 transition-colors">{text}</span>
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center opacity-80 group-hover:opacity-100 transition-opacity ${iconColor}`}>
+                <Icon className="w-4 h-4 text-white" />
+            </div>
+            <span className="text-[13px] text-white/60 group-hover:text-white/90 transition-colors flex-1">{text}</span>
+            <ArrowRight className="w-4 h-4 text-white/10 group-hover:text-white/40 transition-colors translate-x-2 group-hover:translate-x-0" />
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
         </motion.button>
     );
 }
 
-/* ── quick action pills (shown after conversation starts) ── */
-function QuickActions({ onSelect }: { onSelect: (text: string) => void }) {
-    const actions = [
-        { label: 'Report issue', icon: '🚨' },
-        { label: 'Water quality', icon: '🔬' },
-        { label: 'Dashboard', icon: '📊' },
-    ];
-    return (
-        <div className="flex gap-2 px-1 mb-3">
-            {actions.map((a) => (
-                <motion.button
-                    key={a.label}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => onSelect(a.label === 'Report issue' ? 'How do I report a water issue?' : a.label === 'Water quality' ? 'How is water quality measured?' : 'Explain the dashboard')}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] bg-white/[0.04] border border-white/[0.06] text-white/40 hover:text-white/70 hover:border-emerald-500/30 transition-all"
-                >
-                    <span>{a.icon}</span>
-                    {a.label}
-                </motion.button>
-            ))}
-        </div>
-    );
-}
-
-/* ═══════════ main component ═══════════ */
+/* ══════════════ Main ChatBot Component ══════════════ */
 
 export default function ChatBot() {
     const { isOpen, closeChat, toggleChat } = useChat();
@@ -224,10 +197,10 @@ export default function ChatBot() {
     const [showScrollBtn, setShowScrollBtn] = useState(false);
 
     const suggestions = [
-        { text: 'How do I report a water issue?', icon: '📝' },
-        { text: 'What areas have critical shortages?', icon: '🗺️' },
-        { text: 'Explain the heatmap dashboard', icon: '📊' },
-        { text: 'How is water quality measured?', icon: '🔬' },
+        { text: 'Analyze water quality patterns', icon: Sparkles, color: 'bg-cyan-500' },
+        { text: 'Report a critical leakage', icon: Droplets, color: 'bg-blue-500' },
+        { text: 'Show system resource usage', icon: Cpu, color: 'bg-indigo-500' },
+        { text: 'Explain dashboard alerts', icon: Zap, color: 'bg-purple-500' },
     ];
 
     const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
@@ -240,11 +213,10 @@ export default function ChatBot() {
 
     useEffect(() => {
         if (isOpen) {
-            setTimeout(() => inputRef.current?.focus(), 300);
+            setTimeout(() => inputRef.current?.focus(), 400);
         }
     }, [isOpen]);
 
-    // Scroll button visibility
     const handleScroll = () => {
         if (!containerRef.current) return;
         const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
@@ -260,32 +232,21 @@ export default function ChatBot() {
         setInput('');
         setIsLoading(true);
 
-        // Reset textarea height
         if (inputRef.current) inputRef.current.style.height = 'auto';
 
         try {
-            const apiMessages = [...messages, userMessage]
-                .map((m) => ({ role: m.role, content: m.content }));
-
+            const apiMessages = [...messages, userMessage].map((m) => ({ role: m.role, content: m.content }));  
             const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ messages: apiMessages }),
             });
-
             const data = await response.json();
+            const reply = data.reply || data.choices?.[0]?.message?.content || "I couldn't process that query.";
 
-            const reply = data.reply || data.choices?.[0]?.message?.content || "Sorry, I couldn't process that. Please try again.";
-
-            setMessages((prev) => [
-                ...prev,
-                { role: 'assistant', content: reply, timestamp: new Date() },
-            ]);
+            setMessages((prev) => [...prev, { role: 'assistant', content: reply, timestamp: new Date() }]);     
         } catch {
-            setMessages((prev) => [
-                ...prev,
-                { role: 'assistant', content: 'Network error. Please check your connection.', timestamp: new Date() },
-            ]);
+            setMessages((prev) => [...prev, { role: 'assistant', content: 'Connection fragmented. Please retry.', timestamp: new Date() }]);
         } finally {
             setIsLoading(false);
         }
@@ -312,78 +273,103 @@ export default function ChatBot() {
 
     return (
         <>
+            <style jsx global>{`
+                @keyframes shimmer {
+                    100% { transform: translateX(100%); }
+                }
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 4px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: rgba(255,255,255,0.1);
+                    border-radius: 4px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: rgba(255,255,255,0.2);
+                }
+            `}</style>
+
             {/* ── FAB Toggle ── */}
             <AnimatePresence>
                 {!isOpen && (
                     <motion.button
                         onClick={toggleChat}
-                        initial={{ scale: 0, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        exit={{ scale: 0, opacity: 0 }}
-                        whileHover={{ scale: 1.08 }}
-                        whileTap={{ scale: 0.92 }}
-                        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-xl shadow-emerald-500/30 flex items-center justify-center group"
+                        initial={{ scale: 0, rotate: -180 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        exit={{ scale: 0, rotate: 180 }}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        transition={{ type: 'spring', damping: 20, stiffness: 200 }}
+                        className="fixed bottom-8 right-8 z-[100] w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-400 via-blue-500 to-indigo-600 p-[1px] shadow-[0_8px_32px_rgba(6,182,212,0.4)] group overflow-hidden"       
                     >
-                        <MessageSquare className="w-6 h-6 group-hover:scale-110 transition-transform" />
-                        {/* Pulse ring */}
-                        <span className="absolute inset-0 rounded-2xl bg-emerald-400/20 animate-ping" style={{ animationDuration: '3s' }} />
+                        <div className="w-full h-full bg-[#060a12]/50 backdrop-blur-xl rounded-[15px] flex items-center justify-center relative z-10 hover:bg-transparent transition-colors duration-300">
+                            <Bot className="w-7 h-7 text-white" />
+                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] z-0" />
                     </motion.button>
                 )}
             </AnimatePresence>
 
-            {/* ── Chat Panel ── */}
+            {/* ── Chat Interface ── */}
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
-                        initial={{ opacity: 0, y: 30, scale: 0.92 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 30, scale: 0.92 }}
-                        transition={{ type: 'spring', damping: 28, stiffness: 350 }}
-                        className="fixed bottom-6 right-6 z-50 w-[420px] h-[620px] max-h-[85vh] rounded-3xl overflow-hidden flex flex-col shadow-2xl shadow-black/60"
-                        style={{
-                            background: 'linear-gradient(180deg, #0a1628 0%, #060e1a 100%)',
-                            border: '1px solid rgba(255,255,255,0.06)',
-                        }}
+                        initial={{ opacity: 0, y: 40, scale: 0.9, filter: 'blur(10px)' }}
+                        animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+                        exit={{ opacity: 0, y: 40, scale: 0.9, filter: 'blur(10px)' }}
+                        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                        className="fixed bottom-6 right-6 z-[100] w-[440px] h-[680px] max-h-[88vh] max-w-[calc(100vw-48px)] rounded-3xl overflow-hidden flex flex-col shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)] bg-[#020617]/90 backdrop-blur-2xl border border-white/[0.08]"
                     >
-                        {/* ── Header ── */}
-                        <div className="relative flex items-center justify-between px-5 py-4">
-                            {/* Glow bar */}
-                            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent" />
+                        {/* ── Premium Header ── */}
+                        <div className="relative h-20 px-6 flex items-center justify-between bg-white/[0.02] border-b border-white/[0.06] overflow-hidden shrink-0">
+                            {/* Animated glowing background */}
+                            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
+                            <div className="absolute -top-10 -left-10 w-40 h-40 bg-cyan-500/20 blur-[50px] rounded-full" />
 
-                            <div className="flex items-center gap-3">
+                            <div className="relative z-10 flex items-center gap-4">
                                 <div className="relative">
-                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                                        <Droplets className="w-5 h-5 text-white" />
+                                    <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 p-[1px] shadow-[0_0_20px_rgba(6,182,212,0.3)]">
+                                        <div className="w-full h-full rounded-[15px] bg-[#020617]/80 backdrop-blur-sm flex items-center justify-center">
+                                            <Sparkles className="w-5 h-5 text-cyan-400" />
+                                        </div>
                                     </div>
-                                    {/* Online indicator */}
-                                    <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-[#0a1628]" />
+                                    <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-[#020617] flex items-center justify-center">
+                                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
-                                        WaterGrid AI
-                                        <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                                <div className="flex flex-col justify-center">
+                                    <h3 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
+                                        L.I.O.N. <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 uppercase tracking-widest font-mono">Core AI</span>
                                     </h3>
-                                    <p className="text-[10px] text-emerald-400/60 font-medium">Online • Powered by Gemini</p>
+                                    <p className="text-[11px] text-white/40 tracking-wider font-medium flex items-center gap-1.5 mt-0.5">
+                                        Liquid Intelligence Node
+                                    </p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-0.5">
+
+                            <div className="relative z-10 flex items-center gap-2">
                                 {hasMessages && (
                                     <motion.button
-                                        initial={{ opacity: 0, scale: 0.8 }}
-                                        animate={{ opacity: 1, scale: 1 }}
+                                        whileHover={{ scale: 1.1, backgroundColor: 'rgba(255,255,255,0.08)' }}  
+                                        whileTap={{ scale: 0.9 }}
                                         onClick={clearChat}
-                                        className="p-2 rounded-xl text-white/25 hover:text-white/60 hover:bg-white/[0.05] transition-all"
-                                        title="New chat"
+                                        className="w-9 h-9 rounded-xl flex items-center justify-center text-white/40 hover:text-white transition-colors"
+                                        title="Reset Interface"
                                     >
                                         <RotateCcw className="w-4 h-4" />
                                     </motion.button>
                                 )}
-                                <button
+                                <motion.button
+                                    whileHover={{ scale: 1.1, backgroundColor: 'rgba(255,255,255,0.08)' }}      
+                                    whileTap={{ scale: 0.9 }}
                                     onClick={closeChat}
-                                    className="p-2 rounded-xl text-white/25 hover:text-white/60 hover:bg-white/[0.05] transition-all"
+                                    className="w-9 h-9 rounded-xl flex items-center justify-center text-white/40 hover:text-white transition-colors border border-white/[0.05]"
                                 >
                                     <X className="w-4 h-4" />
-                                </button>
+                                </motion.button>
                             </div>
                         </div>
 
@@ -391,143 +377,121 @@ export default function ChatBot() {
                         <div
                             ref={containerRef}
                             onScroll={handleScroll}
-                            className="flex-1 overflow-y-auto px-4 py-4 relative"
-                            style={{ scrollbarWidth: 'thin', scrollbarColor: '#1e293b transparent' }}
+                            className="flex-1 overflow-y-auto px-5 py-6 relative custom-scrollbar scroll-smooth"
                         >
-                            {/* Empty State */}
-                            {!hasMessages && (
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ duration: 0.5 }}
-                                    className="flex flex-col items-center justify-center h-full text-center"
-                                >
-                                    {/* Animated hero icon */}
+                            <AnimatePresence mode="wait">
+                                {!hasMessages ? (
                                     <motion.div
-                                        animate={{
-                                            boxShadow: [
-                                                '0 0 30px rgba(16,185,129,0.1)',
-                                                '0 0 60px rgba(16,185,129,0.15)',
-                                                '0 0 30px rgba(16,185,129,0.1)',
-                                            ],
-                                        }}
-                                        transition={{ duration: 3, repeat: Infinity }}
-                                        className="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500/15 to-teal-500/10 border border-emerald-500/20 flex items-center justify-center mb-6"
+                                        key="empty"
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, scale: 0.95 }}
+                                        transition={{ duration: 0.4 }}
+                                        className="flex flex-col items-center justify-center h-full pt-10"      
                                     >
-                                        <motion.div
-                                            animate={{ rotate: [0, 5, -5, 0] }}
-                                            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                                        >
-                                            <Droplets className="w-10 h-10 text-emerald-400" />
-                                        </motion.div>
-                                    </motion.div>
-
-                                    <h3 className="text-lg font-bold text-white/85 mb-1.5">
-                                        Hi, I'm WaterGrid AI
-                                    </h3>
-                                    <p className="text-[13px] text-white/30 mb-8 max-w-[280px] leading-relaxed">
-                                        Your assistant for water issues, reporting, and platform navigation.
-                                    </p>
-
-                                    {/* Suggestions */}
-                                    <div className="grid grid-cols-1 gap-2 w-full max-w-[330px]">
-                                        {suggestions.map((s, i) => (
+                                        <div className="relative mb-8">
+                                            <div className="absolute inset-0 bg-cyan-500/20 blur-3xl rounded-full" />
                                             <motion.div
-                                                key={i}
+                                                animate={{
+                                                    boxShadow: ['0 0 20px rgba(6,182,212,0.2)', '0 0 40px rgba(6,182,212,0.4)', '0 0 20px rgba(6,182,212,0.2)']
+                                                }}
+                                                transition={{ duration: 3, repeat: Infinity }}
+                                                className="w-24 h-24 rounded-3xl bg-gradient-to-br from-cyan-400/10 to-blue-600/10 border border-cyan-400/20 flex items-center justify-center relative z-10"
+                                            >
+                                                <Cpu className="w-10 h-10 text-cyan-400" />
+                                            </motion.div>
+                                        </div>
+
+                                        <h2 className="text-xl font-bold text-white mb-2 text-center">System Online.</h2>
+                                        <p className="text-sm text-white/40 mb-10 text-center max-w-[280px] leading-relaxed">
+                                            I am synced with the city&apos;s hydraulic grid. How can I assist your operations today?
+                                        </p>
+
+                                        <div className="w-full space-y-2.5">
+                                            {suggestions.map((s, i) => (
+                                                <motion.div
+                                                    key={i}
+                                                    initial={{ opacity: 0, x: -20 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    transition={{ delay: 0.3 + i * 0.1, type: 'spring' }}       
+                                                >
+                                                    <SuggestionChip text={s.text} icon={s.icon} iconColor={s.color} onClick={() => handleSubmit(s.text)} />
+                                                </motion.div>
+                                            ))}
+                                        </div>
+                                    </motion.div>
+                                ) : (
+                                    <div className="space-y-2">
+                                        {messages.map((msg, i) => (
+                                            <MessageBubble key={i} msg={msg} />
+                                        ))}
+
+                                        {isLoading && (
+                                            <motion.div
                                                 initial={{ opacity: 0, y: 10 }}
                                                 animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: 0.2 + i * 0.08 }}
+                                                className="flex items-end gap-3 mb-6"
                                             >
-                                                <SuggestionChip
-                                                    text={s.text}
-                                                    icon={s.icon}
-                                                    onClick={() => handleSubmit(s.text)}
-                                                />
+                                                <div className="w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center bg-gradient-to-br from-cyan-400 to-blue-600 shadow-cyan-500/25 border border-cyan-400/30">    
+                                                    <Bot className="w-4 h-4 text-white" />
+                                                </div>
+                                                <div className="bg-white/[0.03] border border-white/[0.08] px-2 py-1.5 rounded-2xl rounded-bl-sm backdrop-blur-xl">
+                                                    <TypingIndicator />
+                                                </div>
                                             </motion.div>
-                                        ))}
+                                        )}
+                                        <div ref={messagesEndRef} className="h-4" />
                                     </div>
-                                </motion.div>
-                            )}
-
-                            {/* Messages */}
-                            {messages.map((msg, i) => (
-                                <MessageBubble key={i} msg={msg} />
-                            ))}
-
-                            {/* Typing indicator */}
-                            {isLoading && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="flex items-start gap-2.5 mb-4"
-                                >
-                                    <div className="w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center bg-gradient-to-br from-emerald-500 to-teal-500 shadow-lg shadow-emerald-500/20">
-                                        <Bot className="w-4 h-4 text-white" />
-                                    </div>
-                                    <div className="bg-white/[0.04] border border-white/[0.07] rounded-2xl rounded-tl-sm">
-                                        <TypingIndicator />
-                                    </div>
-                                </motion.div>
-                            )}
-
-                            {/* Quick actions after first exchange */}
-                            {hasMessages && !isLoading && messages[messages.length - 1]?.role === 'assistant' && (
-                                <QuickActions onSelect={handleSubmit} />
-                            )}
-
-                            <div ref={messagesEndRef} />
+                                )}
+                            </AnimatePresence>
                         </div>
 
-                        {/* Scroll to bottom */}
+                        {/* Scroll to bottom button */}
                         <AnimatePresence>
                             {showScrollBtn && (
                                 <motion.button
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: 10 }}
+                                    initial={{ opacity: 0, y: 10, scale: 0.8 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.8 }}
                                     onClick={() => scrollToBottom()}
-                                    className="absolute bottom-24 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-white/10 border border-white/10 flex items-center justify-center backdrop-blur-lg hover:bg-white/20 transition-colors z-10"
+                                    className="absolute bottom-28 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-[#020617]/80 border border-white/10 flex items-center justify-center backdrop-blur-xl hover:bg-white/10 transition-colors z-20 shadow-xl"
                                 >
-                                    <ChevronDown className="w-4 h-4 text-white/70" />
+                                    <ChevronDown className="w-5 h-5 text-white/60" />
                                 </motion.button>
                             )}
                         </AnimatePresence>
 
                         {/* ── Input Area ── */}
-                        <div className="px-4 pb-4 pt-2">
-                            <div className="flex items-end gap-2 bg-white/[0.03] border border-white/[0.07] rounded-2xl px-4 py-3 focus-within:border-emerald-500/40 focus-within:shadow-[0_0_20px_rgba(16,185,129,0.05)] transition-all">
+                        <div className="p-5 bg-gradient-to-t from-[#020617] to-transparent relative z-10 shrink-0">
+                            <div className="relative flex items-end gap-3 p-2 bg-white/[0.02] border border-white/[0.08] rounded-3xl backdrop-blur-2xl focus-within:border-cyan-500/40 focus-within:bg-white/[0.04] transition-all duration-300 shadow-inner">
                                 <textarea
                                     ref={inputRef}
                                     value={input}
                                     onChange={handleTextareaChange}
                                     onKeyDown={handleKeyDown}
-                                    placeholder="Ask about water issues..."
+                                    placeholder="Initiate query protocol..."
                                     rows={1}
-                                    className="flex-1 bg-transparent text-white/90 text-[13.5px] resize-none outline-none placeholder:text-white/20 max-h-[120px] leading-relaxed"
+                                    className="flex-1 bg-transparent text-white text-[14px] px-3 py-2.5 resize-none outline-none placeholder:text-white/20 min-h-[44px] max-h-[140px] leading-relaxed custom-scrollbar"
                                 />
                                 <motion.button
                                     onClick={() => handleSubmit()}
                                     disabled={isLoading || !input.trim()}
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
-                                    className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-all disabled:opacity-20"
+                                    className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-300 shadow-lg disabled:opacity-30 disabled:shadow-none mb-0.5"
                                     style={{
-                                        background:
-                                            input.trim() && !isLoading
-                                                ? 'linear-gradient(135deg, #10b981, #14b8a6)'
-                                                : 'transparent',
+                                        background: input.trim() && !isLoading
+                                            ? 'linear-gradient(135deg, #06b6d4, #2563eb)'
+                                            : 'rgba(255,255,255,0.05)',
                                     }}
                                 >
                                     {isLoading ? (
-                                        <Loader2 className="w-4 h-4 text-white/40 animate-spin" />
+                                        <Loader2 className="w-5 h-5 text-white/50 animate-spin" />
                                     ) : (
-                                        <Send className="w-4 h-4 text-white" />
+                                        <Send className="w-5 h-5 text-white ml-0.5" />
                                     )}
                                 </motion.button>
                             </div>
-                            <p className="text-center text-[10px] text-white/10 mt-2 font-medium">
-                                Powered by Gemini AI • WaterGrid Platform
-                            </p>
                         </div>
                     </motion.div>
                 )}
